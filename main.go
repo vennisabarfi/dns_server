@@ -18,24 +18,26 @@ func main() {
 	fmt.Println(udpAddr)
 
 	// start listening for udp packages on the address
-	conn, err := net.ListenPacket("udp", port)
+	conn, err := net.ListenUDP("udp", udpAddr)
 	if err != nil {
 		log.Println("Error setting up udp connection ", err)
 	}
 
 	defer conn.Close()
 
+	// Read from UDP listener in endless loop
 	for {
-		buf := make([]byte, 1024)
-		n, addr, err := conn.ReadFrom(buf)
+		var buf [512]byte
+		_, addr, err := conn.ReadFromUDP(buf[0:])
 		if err != nil {
-			log.Println("Error buffering data from udp server", err)
-			continue
+			fmt.Println(err)
+			return
 		}
 
-		go serve(conn, addr, buf[:n])
+		fmt.Print("> ", string(buf[0:]))
 
-		log.Println("Server buffering data")
+		// Write back the message over UPD
+		conn.WriteToUDP([]byte("Hello UDP Client\n"), addr)
 	}
 
 }
